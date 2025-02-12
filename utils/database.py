@@ -1,14 +1,14 @@
-from typing import Optional
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import ConnectionFailure
 from utils.config import Config
+from utils.logger import logger
 
 
 class MongoDB:
     def __init__(self):
         self.config = Config()
         self.uri: str = self.config.mongodb_uri
-        self.client: Optional[AsyncIOMotorClient] = None
+        self.client = None
         self.database = {}
 
     async def connect(self):
@@ -23,7 +23,9 @@ class MongoDB:
         for db_name in self.config.mongodb_dbs:
             self.database[db_name] = self.client[db_name]
 
-    async def get_database(self, db_name: str):
+        logger.debug("Connected to MongoDB")
+
+    def get_database(self, db_name: str):
         return self.database[db_name]
 
     async def close(self) -> None:
@@ -31,8 +33,4 @@ class MongoDB:
             self.client.close()
             self.client = None
 
-    async def __aenter__(self):
-        await self.connect()
-
-    async def __aexit__(self, exc_type, exc_val, tb):
-        await self.close()
+mongodb = MongoDB()

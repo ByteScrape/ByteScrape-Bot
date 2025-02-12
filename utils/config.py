@@ -28,3 +28,5 @@ class Config:
 
         self.save_logs = config["logging"]["save"]
         self.destination_logs = config["logging"]["destination"]
+
+        self.paypal = config["paypal"]

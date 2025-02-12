@@ -3,6 +3,7 @@ from pathlib import Path
 import discord
 from discord.ext import commands
 
+from utils.database import mongodb
 from utils.logger import logger
 from utils.config import Config
 
@@ -25,10 +26,12 @@ class Bot(commands.Bot):
         self.synced = False
 
     async def setup_hook(self):
-        await self.load_cogs()
+        await mongodb.connect()
+
 
     async def on_ready(self):
         await self.wait_until_ready()
+        await self.load_cogs()
         await self.change_presence(
             activity=discord.Game(name=self.config.activity),
             status=self.get_status()
