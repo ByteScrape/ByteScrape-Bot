@@ -2,10 +2,11 @@ import discord
 from discord.ext import commands, tasks
 from utils.config import Config
 from utils.database import mongodb
+from utils.embed import create_embed
 from utils.logger import logger
 from discord import ButtonStyle, app_commands
 from discord.ui import Button, View
-from datetime import datetime, timedelta
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 config = Config()
@@ -36,9 +37,9 @@ class Subscription(commands.Cog):
                 days_overdue = (current_time - due_date).days
 
                 if days_overdue == 7:
-                    embed = discord.Embed(title="Subscription Expired",
-                                          description=f"Please renew your subscription to continue enjoying our services, your service will be **suspended tomorrow** if you do not pay.",
-                                          color=int(config.color, 16))
+                    embed = create_embed(title="Subscription Expired",
+                                         description=f"Please renew your subscription to continue enjoying our services, your service will be **suspended tomorrow** if you do not pay.",
+                                         color=int(config.color, 16))
                     embed.add_field(name="Expiry Date:", value=f"<t:{round(due_date.timestamp())}:D>",
                                     inline=True)
                     embed.add_field(name="Price:", value=f"{price}€", inline=True)
@@ -70,9 +71,9 @@ class Subscription(commands.Cog):
                         logger.error(f"Failed to send subscription expired message to {user.id} | {user.name}")
                     continue
                 elif days_overdue > 7:
-                    embed = discord.Embed(title="Subscription Expired",
-                                          description=f"Please renew your subscription to continue enjoying our services, your service will **now** be **suspended**.",
-                                          color=int(config.color, 16))
+                    embed = create_embed(title="Subscription Expired",
+                                         description=f"Please renew your subscription to continue enjoying our services, your service will **now** be **suspended**.",
+                                         color=int(config.color, 16))
                     embed.add_field(name="Expiry Date:", value=f"<t:{round(due_date.timestamp())}:D>",
                                     inline=True)
                     embed.add_field(name="Price:", value=f"{price}€", inline=True)
@@ -104,9 +105,9 @@ class Subscription(commands.Cog):
                         logger.error(f"Failed to send subscription expired message to {user.id} | {user.name}")
                     continue
                 elif 0 < days_overdue < 7:
-                    embed = discord.Embed(title="Subscription Expired",
-                                          description=f"Please renew your subscription to continue enjoying our services, your service will be **suspended** in **7 days**.",
-                                          color=int(config.color, 16))
+                    embed = create_embed(title="Subscription Expired",
+                                         description=f"Please renew your subscription to continue enjoying our services, your service will be **suspended** in **7 days**.",
+                                         color=int(config.color, 16))
                     embed.add_field(name="Expiry Date:", value=f"<t:{round(due_date.timestamp())}:D>",
                                     inline=True)
                     embed.add_field(name="Price:", value=f"{price}€", inline=True)
