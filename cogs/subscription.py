@@ -12,9 +12,42 @@ from utils.logger import logger
 config = Config()
 
 
-def build_expired_embed(due_date: datetime, price: float, suspended: bool, message: str) -> discord.Embed:
+def create_embeds(description: str, title: str) -> list[discord.Embed]:
+    embeds = []
+    description_limit = 2700  # maximum characters allowed in the description
+    current_embed = discord.Embed(
+        color=int(config.color, 16),
+        title=title
+    )
+    # Split description lines to try preserving formatting
+    remaining_lines = description.splitlines()
+    current_description = ""
+
+    while remaining_lines:
+        next_line = remaining_lines[0]
+        # Check if we can add this line without exceeding the limit
+        if len(current_description) + len(next_line) + 1 <= description_limit:
+            current_description += next_line + "\n"
+            remaining_lines.pop(0)
+        else:
+            current_embed.description = current_description
+            embeds.append(current_embed)
+            # Create a new embed with the same style
+            current_embed = discord.Embed(color=int(config.color, 16))
+            current_description = ""
+
+    # Append final embed if there's any content left
+    if current_description:
+        current_embed.description = current_description
+        current_embed.timestamp = datetime.now()
+        current_embed.set_footer(text=config.footer_text, icon_url=config.footer_icon)
+        embeds.append(current_embed)
+
+    return embeds
+
+def build_expired_embed(due_date: datetime, price: float, suspended: bool, message: str, user: discord.User) -> discord.Embed:
     embed = create_embed(
-        title="Subscription Expired",
+        title=f"Subscription Expired",
         description=message,
     )
     embed.add_field(name="Expiry Date:", value=f"<t:{int(due_date.timestamp())}:D>", inline=True)
@@ -60,22 +93,25 @@ class Subscription(commands.Cog):
             # Prepare the embed message and view based on the overdue duration.
             if days_overdue == 7:
                 message = (
+                    f"{user.mention}\n"
                     "Please renew your subscription to continue enjoying our services, "
                     "your service will be **suspended tomorrow** if you do not pay."
                 )
-                embed = build_expired_embed(due_date, price, suspended=False, message=message)
+                embed = build_expired_embed(due_date, price, suspended=False, message=message, user=user)
             elif days_overdue > 7:
                 message = (
+                    f"{user.mention}\n"
                     "Please renew your subscription to continue enjoying our services, "
                     "your service will **now** be **suspended**."
                 )
-                embed = build_expired_embed(due_date, price, suspended=True, message=message)
+                embed = build_expired_embed(due_date, price, suspended=False, message=message, user=user)
             elif 0 < days_overdue < 7:
                 message = (
+                    f"{user.mention}\n"
                     "Please renew your subscription to continue enjoying our services, "
                     "your service will be **suspended** in **7 days**."
                 )
-                embed = build_expired_embed(due_date, price, suspended=False, message=message)
+                embed = build_expired_embed(due_date, price, suspended=False, message=message, user=user)
             else:
                 # If not overdue or negative days, skip processing.
                 continue
@@ -84,6 +120,10 @@ class Subscription(commands.Cog):
 
             try:
                 await user.send(embed=embed, view=view)
+                channel = self.client.get_channel(int(config.subscriptions_id))
+                if channel:
+                    await channel.send(embed=embed)
+
             except Exception:
                 logger.error(f"Failed to send subscription expired message to {user.id} | {user.name}")
 
@@ -102,7 +142,8 @@ class Subscription(commands.Cog):
             interaction: discord.Interaction,
             user: discord.User,
             price: float,
-            interval: int
+            interval: int,
+            email: str = None,
     ) -> None:
         now = datetime.now()
         next_payment = now + relativedelta(months=interval)
@@ -112,7 +153,8 @@ class Subscription(commands.Cog):
             "interval": interval,
             "last_paid": now,
             "next_payment": next_payment,
-            "overdue_run": False
+            "overdue_run": False,
+            "email": email
         }
 
         try:
@@ -126,9 +168,9 @@ class Subscription(commands.Cog):
 
         try:
             await user.send(
-                f"You have been subscribed to the ByteScrape service for {interval} months. "
-                f"Your subscription will be renewed on {next_payment.strftime('%Y-%m-%d')}. "
-                f"Please pay your subscription before the due date to continue using the service."
+                f"You have been **subscribed** to the **ByteScrape** service for **{interval} months**. "
+                f"Your subscription will be **renewed** on **{next_payment.strftime('%Y-%m-%d')}**. "
+                f"Please **pay** your **subscription** till 7 days after due date. If not your service will be **suspended**."
             )
         except Exception:
             logger.error(f"Failed to send subscription message to {user.id} | {user.name}")
@@ -211,6 +253,53 @@ class Subscription(commands.Cog):
                 ephemeral=True
             )
 
+    @app_commands.command(
+        name="list_subscriptions",
+        description="List all subscriptions from the database."
+    )
+    @app_commands.checks.has_permissions(administrator=True)
+    async def list_subscriptions(self, interaction: discord.Interaction) -> None:
+        db = mongodb.get_database("ByteScrape")
+        subs_collection = db["subscriptions"]
+
+        # Retrieve subscriptions (limit to 100 for this example)
+        subscriptions = await subs_collection.find({}).to_list(length=100)
+
+        if not subscriptions:
+            await interaction.response.send_message("No subscriptions found.", ephemeral=True)
+            return
+
+        # Create a numbered list with all subscription information
+        lines = []
+        for index, doc in enumerate(subscriptions, start=1):
+            user_id = doc.get("_id", "Unknown")
+            last_paid = doc.get("last_paid")
+            next_payment = doc.get("next_payment")
+            interval = doc.get("interval", "N/A")  # interval in months
+
+            if isinstance(last_paid, datetime):
+                last_paid = last_paid.strftime("%Y-%m-%d")
+            else:
+                last_paid = str(last_paid) if last_paid else "N/A"
+
+            if isinstance(next_payment, datetime):
+                next_payment = next_payment.strftime("%Y-%m-%d")
+            else:
+                next_payment = str(next_payment) if next_payment else "N/A"
+
+            lines.append(
+                f"{index}) User: <@{user_id}> | Last Paid: {last_paid} | Next Payment: {next_payment} | Interval: {interval} month(s)"
+            )
+
+        full_description = "\n".join(lines)
+        # Split the long description into multiple embeds, if necessary
+        embeds = create_embeds(full_description, title="Subscriptions List")
+
+        # Send the first embed as the initial response, then follow up with the rest if there are any
+        await interaction.response.send_message(embed=embeds[0], ephemeral=True)
+        if len(embeds) > 1:
+            for embed in embeds[1:]:
+                await interaction.followup.send(embed=embed, ephemeral=True)
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(Subscription(client))

@@ -18,6 +18,7 @@ class Config:
         self.member_id = self.config["bot"]["ids"]["member"]
         self.welcome_id = self.config["bot"]["ids"]["welcome"]
         self.team_id = self.config["bot"]["ids"]["team"]
+        self.subscriptions_id = self.config["bot"]["ids"]["subscriptions"]
 
         self.thumbnail = self.config["bot"]["design"]["thumbnail"]
         self.image = self.config["bot"]["design"]["image"]
@@ -32,6 +33,9 @@ class Config:
         self.github_organisation = self.config["github"]["organisation"]
         self.github_username = self.config["github"]["username"]
         self.github_token = self.config["github"]["token"]
+
+        self.pterodactyl_token = self.config["pterodactyl"]["token"]
+        self.pterodactyl_url = self.config["pterodactyl"]["url"]
 
         self.save_logs = self.config["logging"]["save"]
         self.destination_logs = self.config["logging"]["destination"]

@@ -13,7 +13,7 @@ class Setup(commands.Cog):
     def __init__(self, client: commands.Bot) -> None:
         self.client = client
 
-    @app_commands.command(name="setup", description="Setup the server's embed messages.")
+    @app_commands.command(name="server_setup", description="Setup the server's embed messages.")
     @app_commands.default_permissions(administrator=True)
     @app_commands.guilds(config.guild_id)
     @app_commands.choices(option=[
@@ -21,7 +21,7 @@ class Setup(commands.Cog):
         Choice(name="Ticket", value=2),
         Choice(name="Roles", value=3)
     ])
-    async def setup(self, interaction: Interaction, option: Choice[int]) -> None:
+    async def server_setup(self, interaction: Interaction, option: Choice[int]) -> None:
         if option.value == 1:
             await self._send_rules_embed(interaction)
         elif option.value == 2:
