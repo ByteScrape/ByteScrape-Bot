@@ -16,7 +16,6 @@ def build_expired_embed(due_date: datetime, price: float, suspended: bool, messa
     embed = create_embed(
         title="Subscription Expired",
         description=message,
-        color=int(config.color, 16)
     )
     embed.add_field(name="Expiry Date:", value=f"<t:{int(due_date.timestamp())}:D>", inline=True)
     embed.add_field(name="Price:", value=f"{price}€", inline=True)
@@ -124,6 +123,15 @@ class Subscription(commands.Cog):
                 "Failed to add subscription. Please try again later.",
                 ephemeral=True
             )
+
+        try:
+            await user.send(
+                f"You have been subscribed to the ByteScrape service for {interval} months. "
+                f"Your subscription will be renewed on {next_payment.strftime('%Y-%m-%d')}. "
+                f"Please pay your subscription before the due date to continue using the service."
+            )
+        except Exception:
+            logger.error(f"Failed to send subscription message to {user.id} | {user.name}")
 
         await interaction.response.send_message(
             f"Subscription added for {user.mention} with a price of {price:.2f}€ "

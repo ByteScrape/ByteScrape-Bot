@@ -3,3 +3,5 @@ emoji
 colorama
 motor
 python-dateutil
+aiohttp
+aiofiles
