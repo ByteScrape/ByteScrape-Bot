@@ -10,5 +10,5 @@ config = Config()
 def create_embed(**kwargs):
     embed = discord.Embed(**kwargs)
     if config.timestamp:
-        embed.timestamp = datetime.utcnow()
+        embed.timestamp = datetime.now()
     return embed
