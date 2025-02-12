@@ -3,6 +3,7 @@
   "bot": {
     "token": "Your Token",
     "description": "Your description",
+    "subscription_delay": 24,
     "presence": {
       "activity": "Monitoring...",
       "status": 0
@@ -13,10 +14,10 @@
     "design": {
       "thumbnail": "url to image",
       "image": "url to image",
-      "color": "7b00bd",
+      "color": "809b8f",
       "footer": {
-        "text": "Your footer",
-        "icon": "url to icon",
+        "text": "ByteScrape",
+        "icon": "https://cdn.discordapp.com/attachments/847594343450935356/1121540939572318408/logo.png",
         "timestamp": true
       }
     }
