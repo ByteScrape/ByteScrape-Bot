@@ -1,7 +1,6 @@
 import json
 
 
-
 class Config:
     def __init__(self):
         config = json.load(open("./config.json", "r"))
@@ -10,6 +9,7 @@ class Config:
 
         self.token = config["bot"]["token"]
         self.description = config["bot"]["description"]
+        self.subscription_delay = config["bot"]["subscription_delay"]
 
         self.activity = config["bot"]["presence"]["activity"]
         self.status = config["bot"]["presence"]["status"]

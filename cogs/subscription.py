@@ -11,17 +11,17 @@ from dateutil.relativedelta import relativedelta
 config = Config()
 
 
-
 class Subscription(commands.Cog):
     def __init__(self, client):
         self.client = client
-        self.subscriptions = mongodb.get_database("ByteScrape")["subscriptions"]  # Will assign this once the connection is ready
+        self.subscriptions = mongodb.get_database("ByteScrape")[
+            "subscriptions"]  # Will assign this once the connection is ready
         self.check_subscriptions.start()
 
     def cog_unload(self):
         self.check_subscriptions.cancel()
 
-    @tasks.loop(hours=24)
+    @tasks.loop(hours=int(config.subscription_delay))
     async def check_subscriptions(self):
         current_time = datetime.now()
 
@@ -175,7 +175,8 @@ class Subscription(commands.Cog):
 
     @app_commands.command(name="set_last_paid",
                           description="Set the last paid date for a user's subscription (DD-MM-YYYY).")
-    @app_commands.describe(user="The user whose subscription last paid date should be updated.", last_paid="The new last paid date (DD-MM-YYYY).")
+    @app_commands.describe(user="The user whose subscription last paid date should be updated.",
+                           last_paid="The new last paid date (DD-MM-YYYY).")
     @app_commands.checks.has_permissions(administrator=True)
     async def set_last_paid(self, interaction: discord.Interaction, user: discord.User, last_paid: str):
         try:
@@ -211,6 +212,27 @@ class Subscription(commands.Cog):
             f"Next payment is due on {next_payment.strftime('%Y-%m-%d')}.",
             ephemeral=True
         )
+
+    @app_commands.command(
+        name="remove_subscription",
+        description="Remove a user's subscription."
+    )
+    @app_commands.describe(user="The user whose subscription should be removed.")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def remove_subscription(self, interaction: discord.Interaction, user: discord.User):
+        try:
+            result = await self.subscriptions.delete_one({"_id": int(user.id)})
+
+            if result.deleted_count == 1:
+                return await interaction.response.send_message(f"Subscription removed for {user.mention}.",
+                                                               ephemeral=True)
+            else:
+                return await interaction.response.send_message(f"No subscription found for {user.mention}.",
+                                                               ephemeral=True)
+        except Exception as e:
+            logger.error(f"Failed to remove subscription for {user.id} | {user.name}: {e}")
+            return await interaction.response.send_message("Failed to remove subscription. Please try again later.",
+                                                           ephemeral=True)
 
 
 async def setup(client):
