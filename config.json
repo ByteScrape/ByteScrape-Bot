@@ -1,0 +1,36 @@
+{
+  "name": "Discord Bot",
+  "bot": {
+    "token": "Your Token",
+    "description": "Your description",
+    "presence": {
+      "activity": "Monitoring...",
+      "status": 0
+    },
+    "ids": {
+      "guild": 839207316808007761
+    },
+    "design": {
+      "thumbnail": "url to image",
+      "image": "url to image",
+      "color": "7b00bd",
+      "footer": {
+        "text": "Your footer",
+        "icon": "url to icon",
+        "timestamp": true
+      }
+    }
+  },
+  "database": {
+    "mongodb": {
+      "uri": "mongodb://localhost:27017",
+      "dbs": [
+        ""
+      ]
+    }
+  },
+  "logging": {
+    "save": false,
+    "destination": ""
+  }
+}
