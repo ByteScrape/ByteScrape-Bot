@@ -132,10 +132,12 @@ class Subscription(commands.Cog):
             view = build_subscription_view()
 
             try:
-                await user.send(embed=embed, view=view)
+
                 channel = self.client.get_channel(int(config.subscriptions_id))
                 if channel:
                     await channel.send(embed=embed)
+                await user.send(embed=embed, view=view)
+
 
             except Exception:
                 logger.error(f"Failed to send subscription expired message to {user.id} | {user.name}")
@@ -203,7 +205,8 @@ class Subscription(commands.Cog):
         last_paid="The new last paid date (DD-MM-YYYY)."
     )
     @app_commands.checks.has_permissions(administrator=True)
-    async def set_last_paid(self, interaction: discord.Interaction, user: discord.User, last_paid: str, email: str=None) -> None:
+    async def set_last_paid(self, interaction: discord.Interaction, user: discord.User, last_paid: str,
+                            email: str = None) -> None:
         try:
             last_paid_date = datetime.strptime(last_paid, "%d-%m-%Y")
         except ValueError:
@@ -268,7 +271,7 @@ class Subscription(commands.Cog):
             )
 
     @app_commands.command(
-        name="list_subscriptions",
+        name="list-subscriptions",
         description="List all subscriptions from the database."
     )
     @app_commands.checks.has_permissions(administrator=True)
@@ -302,7 +305,7 @@ class Subscription(commands.Cog):
                 next_payment = str(next_payment) if next_payment else "N/A"
 
             lines.append(
-                f"{index}) User: <@{user_id}> | Last Paid: {last_paid} | Next Payment: {next_payment} | Interval: {interval} month(s)"
+                f"**{index}** | ** **User:** <@{user_id}> | **Last Paid:** {last_paid} | **Next Payment:** {next_payment} | **Interval:** {interval} month(s)"
             )
 
         full_description = "\n".join(lines)

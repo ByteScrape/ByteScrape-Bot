@@ -5,10 +5,8 @@ import aiofiles
 import aiohttp
 import discord
 from discord.ext import commands
-from discord import ButtonStyle, app_commands
-from discord.ui import Button, View
+from discord import app_commands
 from utils.config import Config
-from utils.database import mongodb
 from utils.embed import create_embed
 from utils.logger import logger
 
@@ -72,6 +70,7 @@ async def local_repo_autocomplete(interaction: discord.Interaction, current: str
                 if len(choices) >= 25:
                     break
     return choices
+
 
 class Github(commands.Cog):
     def __init__(self, client: commands.Bot):
@@ -164,6 +163,7 @@ class Github(commands.Cog):
                 await interaction.response.send_message(f"Error removing local repository `{repo}`.", ephemeral=True)
         else:
             await interaction.response.send_message(f"Local repository `{repo}` not found.", ephemeral=True)
+
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(Github(client))

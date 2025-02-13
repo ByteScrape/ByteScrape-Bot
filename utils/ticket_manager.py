@@ -14,7 +14,7 @@ class TicketHandler:
     async def ticket(self) -> None:
         # Determine the category via the selected service value
         service_value = self.interaction.data.get("values", [None])[0]
-        category_id = int(self.config.config["ids"]["categories"].get(service_value, 0))
+        category_id = int(self.config.config["bot"]["ids"]["categories"].get(service_value, 0))
         category = self.client.get_channel(category_id)
         channel = await self.interaction.guild.create_text_channel(
             name=f"{self.interaction.user.name}",
@@ -89,31 +89,12 @@ class TicketHandler:
             ephemeral=True
         )
 
-    async def roles(self) -> None:
-        try:
-            role_value = self.interaction.data.get("values", [None])[0]
-            role = discord.utils.get(
-                self.interaction.guild.roles,
-                id=self.config.config["ids"]["roles"].get(role_value)
-            )
-            if role is None:
-                return await self.interaction.response.send_message("Role not found.", ephemeral=True)
-            if role not in self.interaction.user.roles:
-                await self.interaction.user.add_roles(role)
-                await self.interaction.response.send_message(f"You added {role.name} to your roles.", ephemeral=True)
-            else:
-                await self.interaction.user.remove_roles(role)
-                await self.interaction.response.send_message(f"You removed {role.name} from your roles.", ephemeral=True)
-        except Exception:
-            await self.interaction.response.send_message("Something went wrong.", ephemeral=True)
-
     async def manage(self) -> None:
         actions = {
             "ticket": self.ticket,
             "yes": self.yes,
             "no": self.no,
-            "close": self.close,
-            "roles": self.roles
+            "close": self.close
         }
         custom_id = self.interaction.data.get("custom_id")
         action = actions.get(custom_id)
