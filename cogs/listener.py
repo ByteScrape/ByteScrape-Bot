@@ -1,15 +1,17 @@
+import asyncio
 import datetime
 
 import discord
 from dateutil.relativedelta import relativedelta
 from discord import InteractionType, Interaction, ButtonStyle
-from discord.app_commands import describe
 from discord.ext import commands
 from discord.ui import Button, View
 
 from utils.config import Config
 from utils.database import mongodb
 from utils.embed import create_embed
+from utils.logger import logger
+from utils.pterodactyl import PterodactylAPI
 from utils.ticket_manager import TicketHandler
 
 config = Config()
@@ -89,7 +91,8 @@ class Listener(commands.Cog):
             now = datetime.datetime.now()
 
             if result.deleted_count == 1:
-                embed = create_embed(color=discord.Color.dark_red().value, title="Subscription Cancellation", description=f"Subscription for <@{confirm_user_id}> has been cancelled on {now.strftime('%Y-%m-%d')}.")
+                embed = create_embed(color=discord.Color.dark_red().value, title="Subscription Cancellation",
+                                     description=f"Subscription for <@{confirm_user_id}> has been cancelled on {now.strftime('%Y-%m-%d')}.")
                 await interaction.response.edit_message(embed=embed, view=None)
             else:
                 await interaction.response.send_message("Failed to delete the subscription.", ephemeral=True)
@@ -124,6 +127,8 @@ class Listener(commands.Cog):
 
             # Use the saved interval in months to calculate the next payment date
             interval = doc.get("interval", 1)  # Default to 1 month if missing
+            email = doc.get("email")
+            user = self.client.get_user(confirm_user_id)
             next_payment = now + relativedelta(months=interval)
 
             result = await subs.update_one(
@@ -138,7 +143,24 @@ class Listener(commands.Cog):
 
                 await subscription_channel.send(embed=embed)
 
-                return await interaction.response.send_message("Your payment has been confirmed.", ephemeral=True)
+                await interaction.response.send_message("The payment has been confirmed.", ephemeral=True)
+
+                try:
+                    await user.send(embed=embed)
+                except Exception:
+                    logger.error(f"Failed to send subscription confirmation message to {user.id} | {user.name}")
+
+                if email is None:
+                    logger.error(f"No email found for suspended subscription for {user.id} | {user.name}")
+                else:
+                    async with PterodactylAPI() as api:
+                        try:
+                            await api.unsuspend_servers_by_email(email)
+                        except Exception as e:
+                            logger.error("Error:", e)
+                            await asyncio.sleep(15)
+                            await api.unsuspend_servers_by_email(email)
+
             else:
                 await interaction.response.send_message("Failed to update the subscription.", ephemeral=True)
 

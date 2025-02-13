@@ -8,6 +8,7 @@ from utils.config import Config
 from utils.database import mongodb
 from utils.embed import create_embed
 from utils.logger import logger
+from utils.pterodactyl import PterodactylAPI
 
 config = Config()
 
@@ -45,7 +46,9 @@ def create_embeds(description: str, title: str) -> list[discord.Embed]:
 
     return embeds
 
-def build_expired_embed(due_date: datetime, price: float, suspended: bool, message: str, user: discord.User) -> discord.Embed:
+
+def build_expired_embed(due_date: datetime, price: float, suspended: bool, message: str,
+                        user: discord.User) -> discord.Embed:
     embed = create_embed(
         title=f"Subscription Expired",
         description=message,
@@ -83,6 +86,7 @@ class Subscription(commands.Cog):
             user_id = document.get("_id")
             due_date = document.get("next_payment")
             price = document.get("price")
+            email = document.get("email")
             user = self.client.get_user(user_id)
 
             if user is None:
@@ -105,6 +109,15 @@ class Subscription(commands.Cog):
                     "your service will **now** be **suspended**."
                 )
                 embed = build_expired_embed(due_date, price, suspended=False, message=message, user=user)
+                if email is None:
+                    logger.error(f"No email found for suspended subscription for {user.id} | {user.name}")
+                else:
+                    async with PterodactylAPI() as api:
+                        try:
+                            results = await api.suspend_servers_by_email(email)
+                        except Exception as e:
+                            logger.error("Error:", e)
+
             elif 0 < days_overdue < 7:
                 message = (
                     f"{user.mention}\n"
@@ -182,15 +195,15 @@ class Subscription(commands.Cog):
         )
 
     @app_commands.command(
-        name="set_last_paid",
-        description="Set the last paid date for a user's subscription (DD-MM-YYYY)."
+        name="configure-subscription",
+        description="Configure the last paid date for a user's subscription (DD-MM-YYYY)."
     )
     @app_commands.describe(
         user="The user whose subscription last paid date should be updated.",
         last_paid="The new last paid date (DD-MM-YYYY)."
     )
     @app_commands.checks.has_permissions(administrator=True)
-    async def set_last_paid(self, interaction: discord.Interaction, user: discord.User, last_paid: str) -> None:
+    async def set_last_paid(self, interaction: discord.Interaction, user: discord.User, last_paid: str, email: str=None) -> None:
         try:
             last_paid_date = datetime.strptime(last_paid, "%d-%m-%Y")
         except ValueError:
@@ -214,7 +227,8 @@ class Subscription(commands.Cog):
                 {"$set": {
                     "last_paid": last_paid_date,
                     "next_payment": next_payment,
-                    "overdue_run": False
+                    "overdue_run": False,
+                    "email": email
                 }}
             )
         except Exception as e:
@@ -300,6 +314,7 @@ class Subscription(commands.Cog):
         if len(embeds) > 1:
             for embed in embeds[1:]:
                 await interaction.followup.send(embed=embed, ephemeral=True)
+
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(Subscription(client))

@@ -15,7 +15,6 @@ class Setup(commands.Cog):
 
     @app_commands.command(name="server_setup", description="Setup the server's embed messages.")
     @app_commands.default_permissions(administrator=True)
-    @app_commands.guilds(config.guild_id)
     @app_commands.choices(option=[
         Choice(name="Rules", value=1),
         Choice(name="Ticket", value=2),
