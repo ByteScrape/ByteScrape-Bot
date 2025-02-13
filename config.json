@@ -1,7 +1,7 @@
 {
   "name": "Discord Bot",
   "bot": {
-    "token": "Your Token",
+    "token": "yout token",
     "description": "Your description",
     "subscription_delay": 24,
     "presence": {
@@ -9,15 +9,31 @@
       "status": 0
     },
     "ids": {
-      "guild": 839207316808007761
+      "guild": 839207316808007761,
+      "member": 839207378988826695,
+      "welcome": 986331349268955306,
+      "team": 847891702106292235,
+      "subscriptions": 847594343450935356,
+      "categories": {
+        "discord": 863838678966992907,
+        "endpoints": 1020452028037746820,
+        "redirect": 865925163942150155,
+        "toolbox": 865934793757163541,
+        "monitor": 865944331076239361,
+        "other": 1318253468401668136
+      },
+      "roles": {
+        "announcements": 920767914641096795,
+        "polls": 848568552722268160
+      }
     },
     "design": {
       "thumbnail": "url to image",
       "image": "url to image",
-      "color": "809b8f",
+      "color": "your color hex code",
       "footer": {
-        "text": "ByteScrape",
-        "icon": "https://cdn.discordapp.com/attachments/847594343450935356/1121540939572318408/logo.png",
+        "text": "your footer",
+        "icon": "your icon url",
         "timestamp": true
       }
     }
@@ -26,12 +42,22 @@
     "mongodb": {
       "uri": "mongodb://localhost:27017",
       "dbs": [
-        ""
+        "db name 1"
       ]
     }
+  },
+  "github": {
+    "organisation": "your github organisation",
+    "username": "your username",
+    "token": "access token for github"
+  },
+  "pterodactyl": {
+    "token": "pterodactyl token",
+    "url": " baseurl to panel"
   },
   "logging": {
     "save": false,
     "destination": ""
-  }
+  },
+  "paypal": "your paypal link"
 }
