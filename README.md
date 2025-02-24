@@ -102,3 +102,7 @@ github.username	|Your GitHub username.|"YOUR_GITHUB_USERNAME"|
 
 
 Make sure to properly configure this file according to your needs and environment.
+
+## License
+
+This project is licensed under the MIT License with a Non-Production Clause. This means you are free to use, modify, and distribute the code for non-commercial purposes, but it cannot be used in a production environment. See the [LICENSE](LICENSE) file for the full license text.
